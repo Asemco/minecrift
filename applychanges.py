@@ -76,6 +76,11 @@ def applychanges(mcp_dir, patch_dir = "patches", applyPatches=True, backup = Tru
     if mergeInNew:
         #merge in the new classes
         merge_tree( os.path.join( base_dir, "src" ), mod_src_dir )
+        
+    # copy Start.java
+    copyFile(os.path.join(base_dir, 'mcppatches', 'Start.java'), os.path.join(mod_src_dir, 'Start.java'))
+    replacelineinfile( os.path.join(mod_src_dir, 'Start.java'), "args = concat(new String[] {\"--version\", \"mcp\"", \
+                       "        args = concat(new String[] {\"--version\", \"mcp\", \"--accessToken\", \"0\", \"--assetIndex\", \"%s\", \"--userProperties\", \"{}\"}, args);\n" % mc_version );        
 
     if isForge:
         doForgeFileDiffs(mcp_dir, mcp_dir+'_clean', os.path.join(base_dir, 'forgesrc'), os.path.join(base_dir, 'mcppatches'))

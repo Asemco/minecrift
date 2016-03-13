@@ -51,6 +51,8 @@ def doForgeFileDiffs(mcp_dir, mcp_dir_clean, minecrift_forge_src_dir, mcp_patch_
 
     # copy Start.java
     copyFile(os.path.join(mcp_patch_dir, 'Start.java'), os.path.join(minecrift_forge_src_dir, 'minecrift', 'Start.java'))
+    replacelineinfile( os.path.join(minecrift_forge_src_dir, 'minecrift', 'Start.java'), "args = concat(new String[] {\"--version\", \"mcp\"", \
+                       "        args = concat(new String[] {\"--version\", \"mcp\", \"--accessToken\", \"0\", \"--assetIndex\", \"%s\", \"--userProperties\", \"{}\"}, args);\n" % mc_version );
 
 
 def removeEmptyFolders(path):

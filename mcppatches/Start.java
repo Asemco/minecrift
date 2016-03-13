@@ -13,7 +13,7 @@ import joptsimple.OptionSet;
 import net.minecraft.client.main.Main;
 import net.minecraft.launchwrapper.Launch;
 import net.minecraft.util.Session;
-import org.json.JSONObject;   // JAR available at http://mvnrepository.com/artifact/org.json/json/20140107
+import org.json.JSONObject;
 
 public class Start
 {
@@ -70,7 +70,6 @@ public class Start
                     Main.main(newArgs.toArray(new String[0]));
                 }
                 else {
-                    System.out.println("ARGS: " + newArgs.toString());
                     Launch.main(newArgs.toArray(new String[0]));
                 }
             }
