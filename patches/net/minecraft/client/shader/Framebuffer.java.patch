@@ -357,10 +357,10 @@
 +    	}
 +	}
 +
-+    public void selectTexture(int textureId)
++    public void selectTexture(int index)
 +    {
-+        if(textureId > 0) {
-+            this.framebufferTexture = textureId;
++        if(textureSelector!=null && index > -1) {
++            this.framebufferTexture = textureSelector.getTexIdAtIndex(index);
 +            OpenGlHelper.func_153188_a(OpenGlHelper.field_153198_e, OpenGlHelper.field_153200_g, this.textureType, this.framebufferTexture, 0);    // GL30.glFramebufferTexture2D
 +        }
 +        else {

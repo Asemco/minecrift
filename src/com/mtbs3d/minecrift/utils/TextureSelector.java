@@ -60,12 +60,28 @@ public class TextureSelector {
         mFrameIndex = frameIndex;
     }
 
+    public int getIndexFromTextureId(int texId)
+    {
+        int index = 0;
+        for (Integer i : mTextureIds) {
+            if (i == texId) {
+                return index;
+            }
+            index++;
+        }
+        return -1;
+    }
+
 	/**
 	 * Texture ID for the current frame to bind to the framebuffer.
 	 */
 	public int getCurrentTexId() {
 		return mTextureIds.get(getCurrentSwapIdx());
 	}
+
+    public int getTexIdAtIndex(int index) {
+        return mTextureIds.get(index);
+    }
 
     public int getFirstTexId() {
         if (mTextureIds.size() < 1)

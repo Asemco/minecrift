@@ -165,6 +165,25 @@ public class FBOParams
          }
     }
 
+    public void selectTexture(int index)
+    {
+        if(textureSelector!=null && index > -1) {
+            this._colorTextureId = textureSelector.getTexIdAtIndex(index);
+            if (fboSupport == FBO_SUPPORT.USE_GL30)
+            {
+                GL30.glFramebufferTexture2D(GL30.GL_FRAMEBUFFER, GL30.GL_COLOR_ATTACHMENT0, _textureType, _colorTextureId, 0);
+            }
+            else
+            {
+                EXTFramebufferObject.glFramebufferTexture2DEXT(EXTFramebufferObject.GL_FRAMEBUFFER_EXT, EXTFramebufferObject.GL_COLOR_ATTACHMENT0_EXT, _textureType, _colorTextureId, 0);
+            }
+            mc.checkGLError("FBO bind texture framebuffer");
+        }
+        else {
+            selectTexture();
+        }
+    }
+
     public void bindRenderTarget()
     {
         if (fboSupport == FBO_SUPPORT.USE_GL30)

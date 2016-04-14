@@ -138,7 +138,7 @@
      private MusicTicker mcMusicTicker;
      private ResourceLocation mojangLogo;
      private final MinecraftSessionService sessionService;
-@@ -331,9 +365,104 @@
+@@ -331,9 +365,105 @@
      private String debugProfilerName = "root";
      private static final String __OBFID = "CL_00000631";
  
@@ -224,12 +224,13 @@
 +    public ErrorHelper errorHelper;
 +    public static final String RENDER_SETUP_FAILURE_MESSAGE = "Failed to initialise stereo rendering plugin: ";
 +    public int currentEyeTextureId = 0;
++    public int[] currentTextureIndex = new int[2];
 +
 +    /*
 +     * The minecriftVerString will be automatically updated by the build scripts, do not modify here.
 +     * Modify minecriftversion.py in root minecrift dir.
 +     */
-+    public final String minecriftVerString = "Minecrift 1.7.10 R2b";
++    public final String minecriftVerString = "Minecrift 1.7.10 R3";
 +    /* end version */
 +    /** END MINECRIFT */
 +
@@ -243,7 +244,7 @@
          this.mcDataDir = dataDir;
          this.fileAssets = assetsDir;
          this.fileResourcepacks = resourcePackDir;
-@@ -356,6 +485,17 @@
+@@ -356,6 +486,19 @@
          this.jvm64bit = isJvm64bit();
          ImageIO.setUseCache(false);
          Bootstrap.register();
@@ -252,6 +253,8 @@
 +        renderTexProvider[0] = new TextureSelector();
 +        renderTexProvider[1] = new TextureSelector();
 +        mirrorTexProvider    = new TextureSelector();
++        currentTextureIndex[0] = 0;
++        currentTextureIndex[1] = 0;
 +        if (!vrSettings.badStereoProviderPluginID.isEmpty()) {
 +            vrSettings.stereoProviderPluginID = vrSettings.badStereoProviderPluginID;
 +            vrSettings.badStereoProviderPluginID = "";
@@ -261,7 +264,7 @@
      }
  
      private static boolean isJvm64bit()
-@@ -421,24 +561,37 @@
+@@ -421,24 +564,37 @@
          File var2 = new File(getMinecraft().mcDataDir, "crash-reports");
          File var3 = new File(var2, "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + "-client.txt");
          System.out.println(crashReportIn.getCompleteReport());
@@ -304,7 +307,7 @@
      public void setServer(String serverHostname, int serverPort)
      {
          this.serverName = serverHostname;
-@@ -448,9 +601,11 @@
+@@ -448,9 +604,11 @@
      /**
       * Starts the game: initializes the canvas, the title, the settings, etcetera.
       */
@@ -318,7 +321,7 @@
  
          if (this.gameSettings.overrideHeight > 0 && this.gameSettings.overrideWidth > 0)
          {
-@@ -480,7 +635,9 @@
+@@ -480,7 +638,9 @@
          }
  
          Display.setResizable(true);
@@ -329,7 +332,7 @@
          logger.info("LWJGL Version: " + Sys.getVersion());
          Util.EnumOS var1 = Util.getOSType();
  
-@@ -504,7 +661,14 @@
+@@ -504,7 +664,14 @@
  
          try
          {
@@ -345,7 +348,7 @@
          }
          catch (LWJGLException var7)
          {
-@@ -552,11 +716,33 @@
+@@ -552,11 +719,33 @@
          this.mcResourceManager = new SimpleReloadableResourceManager(this.metadataSerializer_);
          this.mcLanguageManager = new LanguageManager(this.metadataSerializer_, this.gameSettings.language);
          this.mcResourceManager.registerReloadListener(this.mcLanguageManager);
@@ -381,7 +384,7 @@
          this.mcSoundHandler = new SoundHandler(this.mcResourceManager, this.gameSettings);
          this.mcResourceManager.registerReloadListener(this.mcSoundHandler);
          this.mcMusicTicker = new MusicTicker(this);
-@@ -567,13 +753,30 @@
+@@ -567,13 +756,30 @@
              this.fontRendererObj.setUnicodeFlag(this.isUnicode());
              this.fontRendererObj.setBidiFlag(this.mcLanguageManager.isCurrentLanguageBidirectional());
          }
@@ -413,7 +416,7 @@
          this.entityRenderer = new EntityRenderer(this, this.mcResourceManager);
          this.mcResourceManager.registerReloadListener(this.entityRenderer);
          AchievementList.openInventory.setStatStringFormatter(new IStatStringFormat()
-@@ -591,6 +794,12 @@
+@@ -591,6 +797,12 @@
                  }
              }
          });
@@ -426,7 +429,7 @@
          this.mouseHelper = new MouseHelper();
          this.checkGLError("Pre startup");
          GL11.glEnable(GL11.GL_TEXTURE_2D);
-@@ -605,30 +814,110 @@
+@@ -605,30 +817,110 @@
          GL11.glLoadIdentity();
          GL11.glMatrixMode(GL11.GL_MODELVIEW);
          this.checkGLError("Startup");
@@ -538,7 +541,7 @@
          if (this.gameSettings.fullScreen && !this.fullscreen)
          {
              this.toggleFullscreen();
-@@ -636,7 +925,11 @@
+@@ -636,7 +928,11 @@
  
          try
          {
@@ -551,7 +554,7 @@
          }
          catch (OpenGLException var4)
          {
-@@ -782,8 +1075,8 @@
+@@ -782,8 +1078,8 @@
          GL11.glDisable(GL11.GL_FOG);
          GL11.glDisable(GL11.GL_DEPTH_TEST);
          GL11.glEnable(GL11.GL_TEXTURE_2D);
@@ -562,7 +565,7 @@
          {
              this.mojangLogo = this.renderEngine.getDynamicTextureLocation("logo", new DynamicTexture(ImageIO.read(this.mcDefaultResourcePack.getInputStream(locationMojangPng))));
              this.renderEngine.bindTexture(this.mojangLogo);
-@@ -791,8 +1084,8 @@
+@@ -791,8 +1087,8 @@
          catch (IOException var7)
          {
              logger.error("Unable to load logo: " + locationMojangPng, var7);
@@ -573,7 +576,7 @@
          Tessellator var4 = Tessellator.instance;
          var4.startDrawingQuads();
          var4.setColorOpaque_I(16777215);
-@@ -813,6 +1106,9 @@
+@@ -813,6 +1109,9 @@
          GL11.glEnable(GL11.GL_ALPHA_TEST);
          GL11.glAlphaFunc(GL11.GL_GREATER, 0.1F);
          GL11.glFlush();
@@ -583,7 +586,7 @@
          this.resetSize();
      }
  
-@@ -845,7 +1141,8 @@
+@@ -845,7 +1144,8 @@
       */
      public void displayGuiScreen(GuiScreen guiScreenIn)
      {
@@ -593,7 +596,7 @@
          {
              this.currentScreen.onGuiClosed();
          }
-@@ -858,6 +1155,21 @@
+@@ -858,6 +1158,21 @@
          {
              guiScreenIn = new GuiGameOver();
          }
@@ -615,7 +618,7 @@
  
          if (guiScreenIn instanceof GuiMainMenu)
          {
-@@ -870,7 +1182,7 @@
+@@ -870,7 +1185,7 @@
          if (guiScreenIn != null)
          {
              this.setIngameNotInFocus();
@@ -624,7 +627,7 @@
              int var3 = var2.getScaledWidth();
              int var4 = var2.getScaledHeight();
              ((GuiScreen)guiScreenIn).setWorldAndResolution(this, var3, var4);
-@@ -886,7 +1198,9 @@
+@@ -886,7 +1201,9 @@
      /**
       * Checks for an OpenGL error. If there is one, prints the error ID and error string.
       */
@@ -635,7 +638,7 @@
      {
          int var2 = GL11.glGetError();
  
-@@ -1016,8 +1330,11 @@
+@@ -1016,8 +1333,11 @@
      /**
       * Called repeatedly from run()
       */
@@ -648,7 +651,7 @@
          this.mcProfiler.startSection("root");
  
          if (Display.isCreated() && Display.isCloseRequested())
-@@ -1025,6 +1342,10 @@
+@@ -1025,6 +1345,10 @@
              this.shutdown();
          }
  
@@ -659,7 +662,7 @@
          if (this.isGamePaused && this.theWorld != null)
          {
              float var1 = this.timer.renderPartialTicks;
-@@ -1042,77 +1363,190 @@
+@@ -1042,77 +1366,192 @@
              this.refreshResources();
          }
  
@@ -783,8 +786,10 @@
 +            // Select framebuffer and eye render target texture
 +            this.framebufferMc = framebuffers[this.currentEye.value()];
 +            this.currentEyeTextureId = this.stereoProvider.getEyeRenderTexture(this.currentEye);
++            this.currentTextureIndex[this.currentEye.value()] = renderTexProvider[this.currentEye.value()].getIndexFromTextureId(this.currentEyeTextureId);
++            //print("Current Eye: " + this.currentEye.toString() + ", Current Texture ID: " + this.currentEyeTextureId + ", Texture Index: " +this.currentTextureIndex[this.currentEye.value()]);
 +            this.framebufferMc.bindFramebuffer(true);
-+            this.framebufferMc.selectTexture(this.currentEyeTextureId);
++            this.framebufferMc.selectTexture(this.currentTextureIndex[this.currentEye.value()]);
 +
 +            if (this.entityRenderer != null)
 +            {
@@ -905,7 +910,7 @@
          Thread.yield();
          this.mcProfiler.startSection("stream");
          this.mcProfiler.startSection("update");
-@@ -1121,9 +1555,10 @@
+@@ -1121,9 +1560,10 @@
          this.stream.func_152922_k();
          this.mcProfiler.endSection();
          this.mcProfiler.endSection();
@@ -917,7 +922,7 @@
  
          while (getSystemTime() >= this.debugUpdateTime + 1000L)
          {
-@@ -1141,11 +1576,29 @@
+@@ -1141,11 +1581,29 @@
          }
  
          this.mcProfiler.endSection();
@@ -951,7 +956,7 @@
      }
  
      /**
-@@ -1153,35 +1606,40 @@
+@@ -1153,35 +1611,40 @@
       */
      public void resetSize()
      {
@@ -1017,7 +1022,7 @@
      }
  
      public boolean isFramerateLimitBelowMax()
-@@ -1467,8 +1925,9 @@
+@@ -1467,8 +1930,9 @@
              }
          }
      }
@@ -1029,7 +1034,7 @@
      {
          if (this.leftClickCounter <= 0)
          {
-@@ -1476,7 +1935,9 @@
+@@ -1476,7 +1940,9 @@
  
              if (this.objectMouseOver == null)
              {
@@ -1040,7 +1045,7 @@
  
                  if (this.playerController.isNotCreative())
                  {
-@@ -1515,7 +1976,9 @@
+@@ -1515,7 +1981,9 @@
      /**
       * Called when user clicked he's mouse right button (place)
       */
@@ -1051,7 +1056,7 @@
      {
          this.rightClickDelayTimer = 4;
          boolean var1 = true;
-@@ -1523,7 +1986,9 @@
+@@ -1523,7 +1991,9 @@
  
          if (this.objectMouseOver == null)
          {
@@ -1062,7 +1067,7 @@
          }
          else
          {
-@@ -1546,7 +2011,14 @@
+@@ -1546,7 +2016,14 @@
                      {
                          int var6 = var2 != null ? var2.stackSize : 0;
  
@@ -1078,7 +1083,7 @@
                          {
                              var1 = false;
                              this.thePlayer.swingItem();
-@@ -1573,7 +2045,14 @@
+@@ -1573,7 +2050,14 @@
          {
              ItemStack var7 = this.thePlayer.inventory.getCurrentItem();
  
@@ -1094,7 +1099,7 @@
              {
                  this.entityRenderer.itemRenderer.resetEquippedProgress2();
              }
-@@ -1632,8 +2111,10 @@
+@@ -1632,8 +2116,10 @@
              }
  
              Display.setFullscreen(this.fullscreen);
@@ -1107,7 +1112,7 @@
          }
          catch (Exception var2)
          {
-@@ -1646,29 +2127,23 @@
+@@ -1646,29 +2132,23 @@
       */
      private void resize(int width, int height)
      {
@@ -1145,7 +1150,7 @@
      }
  
      /**
-@@ -1693,11 +2168,24 @@
+@@ -1693,11 +2173,24 @@
          {
              --this.rightClickDelayTimer;
          }
@@ -1170,7 +1175,7 @@
              this.ingameGUI.updateTick();
          }
  
-@@ -1719,6 +2207,10 @@
+@@ -1719,6 +2212,10 @@
  
          if (this.currentScreen == null && this.thePlayer != null)
          {
@@ -1181,7 +1186,7 @@
              if (this.thePlayer.getHealth() <= 0.0F)
              {
                  this.displayGuiScreen((GuiScreen)null);
-@@ -1792,6 +2284,12 @@
+@@ -1792,6 +2289,12 @@
  
              while (Mouse.next())
              {
@@ -1194,7 +1199,7 @@
                  var9 = Mouse.getEventButton();
                  KeyBinding.setKeyBindState(var9 - 100, Mouse.getEventButtonState());
  
-@@ -1808,6 +2306,11 @@
+@@ -1808,6 +2311,11 @@
  
                      if (var4 != 0)
                      {
@@ -1206,7 +1211,7 @@
                          this.thePlayer.inventory.changeCurrentItem(var4);
  
                          if (this.gameSettings.noclip)
-@@ -1824,6 +2327,8 @@
+@@ -1824,6 +2332,8 @@
  
                              this.gameSettings.noclipRate += (float)var4 * 0.25F;
                          }
@@ -1215,7 +1220,7 @@
                      }
  
                      if (this.currentScreen == null)
-@@ -1838,6 +2343,11 @@
+@@ -1838,6 +2348,11 @@
                          this.currentScreen.handleMouseInput();
                      }
                  }
@@ -1227,7 +1232,7 @@
              }
  
              if (this.leftClickCounter > 0)
-@@ -1889,6 +2399,10 @@
+@@ -1889,6 +2404,10 @@
                      }
                      else
                      {
@@ -1238,7 +1243,7 @@
                          if (Keyboard.getEventKey() == 1)
                          {
                              this.displayInGameMenu();
-@@ -1932,10 +2446,12 @@
+@@ -1932,10 +2451,12 @@
                              this.gameSettings.saveOptions();
                          }
  
@@ -1252,7 +1257,7 @@
  
                          if (Keyboard.getEventKey() == 61)
                          {
-@@ -1975,6 +2491,11 @@
+@@ -1975,6 +2496,11 @@
                          }
                      }
                  }
@@ -1264,7 +1269,7 @@
              }
  
              for (var9 = 0; var9 < 9; ++var9)
-@@ -2070,6 +2591,12 @@
+@@ -2070,6 +2596,12 @@
  
              this.sendClickBlockToController(this.currentScreen == null && this.gameSettings.keyBindAttack.getIsKeyPressed() && this.inGameHasFocus);
          }
@@ -1277,7 +1282,7 @@
  
          if (this.theWorld != null)
          {
-@@ -2164,7 +2691,11 @@
+@@ -2164,7 +2696,11 @@
              this.mcProfiler.endStartSection("pendingConnection");
              this.myNetworkManager.processReceivedPackets();
          }
@@ -1290,7 +1295,7 @@
          this.mcProfiler.endSection();
          this.systemTime = getSystemTime();
      }
-@@ -2174,6 +2705,15 @@
+@@ -2174,6 +2710,15 @@
       */
      public void launchIntegratedServer(String folderName, String worldName, WorldSettings worldSettingsIn)
      {
@@ -1306,7 +1311,7 @@
          this.loadWorld((WorldClient)null);
          System.gc();
          ISaveHandler var4 = this.saveLoader.getSaveLoader(folderName, false);
-@@ -2207,37 +2747,81 @@
+@@ -2207,37 +2752,81 @@
  
          this.loadingScreen.displaySavingString(I18n.format("menu.loadingLevel", new Object[0]));
  
@@ -1411,7 +1416,7 @@
  
      /**
       * unloads the current world first
-@@ -2252,6 +2836,13 @@
+@@ -2252,6 +2841,13 @@
       */
      public void loadWorld(WorldClient worldClientIn, String loadingMessage)
      {
@@ -1425,7 +1430,7 @@
          if (worldClientIn == null)
          {
              NetHandlerPlayClient var3 = this.getNetHandler();
-@@ -2264,6 +2855,23 @@
+@@ -2264,6 +2860,23 @@
              if (this.theIntegratedServer != null)
              {
                  this.theIntegratedServer.initiateShutdown();
@@ -1449,7 +1454,7 @@
              }
  
              this.theIntegratedServer = null;
-@@ -2290,6 +2898,15 @@
+@@ -2290,6 +2903,15 @@
              this.mcResourcePackRepository.func_148529_f();
              this.setServerData((ServerData)null);
              this.integratedServerIsRunning = false;
@@ -1465,7 +1470,7 @@
          }
  
          this.mcSoundHandler.stopSounds();
-@@ -2406,10 +3023,12 @@
+@@ -2406,10 +3028,12 @@
          return this.thePlayer != null ? this.thePlayer.sendQueue : null;
      }
  
@@ -1479,7 +1484,7 @@
  
      public static boolean isFancyGraphicsEnabled()
      {
-@@ -2437,107 +3056,117 @@
+@@ -2437,107 +3061,117 @@
              Item var2;
              int var5;
  
@@ -1696,7 +1701,7 @@
  
              if (var1)
              {
-@@ -2810,11 +3439,18 @@
+@@ -2810,11 +3444,18 @@
          playerSnooper.addStatToSnooper("gl_max_texture_size", Integer.valueOf(getGLMaximumTextureSize()));
      }
  
@@ -1715,7 +1720,7 @@
          for (int var0 = 16384; var0 > 0; var0 >>= 1)
          {
              GL11.glTexImage2D(GL11.GL_PROXY_TEXTURE_2D, 0, GL11.GL_RGBA, var0, var0, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer)null);
-@@ -2822,12 +3458,14 @@
+@@ -2822,12 +3463,14 @@
  
              if (var1 != 0)
              {
@@ -1730,7 +1735,7 @@
  
      /**
       * Returns whether snooping is enabled or not.
-@@ -3134,4 +3772,1081 @@
+@@ -3134,4 +3777,1081 @@
              }
          }
      }
@@ -2512,7 +2517,7 @@
 +            if (this.stereoProvider.isStereo())
 +            {
 +                fsaaSecondPassResultFBO[eye.value()].bindRenderTarget();
-+                fsaaSecondPassResultFBO[eye.value()].selectTexture();
++                fsaaSecondPassResultFBO[eye.value()].selectTexture(this.currentTextureIndex[this.currentEye.value()]);
 +            }
 +            else
 +            {
