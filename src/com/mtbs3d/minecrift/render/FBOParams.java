@@ -336,8 +336,13 @@ public class FBOParams
                     success = false;
                     break;
 
+                case GL30.GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+                    error = ("[ERROR] Framebuffer incomplete: GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE");
+                    success = false;
+                    break;
+
                 default:
-                    error = ("[ERROR] Framebuffer incomplete: Unknown error.");
+                    error = ("[ERROR] Framebuffer incomplete: Unknown error: " + status);
                     success = false;
                     break;
             }

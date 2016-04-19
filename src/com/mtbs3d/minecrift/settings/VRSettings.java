@@ -55,6 +55,10 @@ public class VRSettings
     public static final int INERTIA_LARGE = 2;
     public static final int INERTIA_MASSIVE = 3;
 
+    public static final int MSAA_2 = 0;
+    public static final int MSAA_4 = 1;
+    public static final int MSAA_8 = 2;
+
     public static final float INERTIA_NONE_ADD_FACTOR = 1f / 0.01f;
     public static final float INERTIA_NORMAL_ADD_FACTOR = 1f;
     public static final float INERTIA_LARGE_ADD_FACTOR = 1f / 4f;
@@ -227,6 +231,8 @@ public class VRSettings
     public boolean allowAvatarIK = false;
     public boolean hideGui = true;
     public boolean useKeyBindingForComfortYaw = false;
+    public boolean useMSAA = true;
+    public int msaaSamples = MSAA_4;
 
     private Minecraft mc;
 
@@ -519,6 +525,11 @@ public class VRSettings
                     if (optionTokens[0].equals("useFsaa"))
                     {
                         this.useFsaa = optionTokens[1].equals("true");
+                    }
+
+                    if (optionTokens[0].equals("useMSAA"))
+                    {
+                        this.useMSAA = optionTokens[1].equals("true");
                     }
 
                     if (optionTokens[0].equals("useHighQualityDistortion"))
@@ -925,6 +936,11 @@ public class VRSettings
                     {
                         this.movementQuantisation = Integer.parseInt(optionTokens[1]);
                     }
+
+                    if (optionTokens[0].equals("msaaSamples"))
+                    {
+                        this.msaaSamples = Integer.parseInt(optionTokens[1]);
+                    }
                 }
                 catch (Exception var7)
                 {
@@ -1109,6 +1125,8 @@ public class VRSettings
 	            return var4 + String.format("%.2f", new Object[] { Float.valueOf(this.getHeadTrackSensitivity()) });
 	        case FSAA:
 	            return this.useFsaa ? var4 + "ON" : var4 + "OFF";
+            case MSAA:
+                return this.useMSAA ? var4 + "ON" : var4 + "OFF";
             case HIGH_QUALITY_DISTORTION:
                 return this.useHighQualityDistortion ? var4 + "ON" : var4 + "OFF";
 	        case FSAA_SCALEFACTOR:
@@ -1286,6 +1304,13 @@ public class VRSettings
                     return var4 + "A lot";
                 else if (this.inertiaFactor == INERTIA_MASSIVE)
                     return var4 + "Even more";
+            case MSAA_SAMPLES:
+                if (this.msaaSamples == MSAA_2)
+                    return var4 + "2";
+                else if (this.msaaSamples == MSAA_4)
+                    return var4 + "4";
+                else if (this.msaaSamples == MSAA_8)
+                    return var4 + "8";
             case USE_VR_COMFORT:
                 switch( this.useVrComfort )
                 {
@@ -1560,6 +1585,9 @@ public class VRSettings
 	        case FSAA:
 	            this.useFsaa = !this.useFsaa;
 	            break;
+            case MSAA:
+                this.useMSAA = !this.useMSAA;
+                break;
             case HIGH_QUALITY_DISTORTION:
                 this.useHighQualityDistortion = !this.useHighQualityDistortion;
                 break;
@@ -1660,6 +1688,11 @@ public class VRSettings
                 this.inertiaFactor +=1;
                 if (this.inertiaFactor > INERTIA_MASSIVE)
                     this.inertiaFactor = INERTIA_NONE;
+                break;
+            case MSAA_SAMPLES:
+                this.msaaSamples +=1;
+                if (this.msaaSamples > MSAA_8)
+                    this.msaaSamples = MSAA_2;
                 break;
             case ALLOW_FORWARD_PLUS_STRAFE:
                 this.allowForwardPlusStrafe = !this.allowForwardPlusStrafe;
@@ -2045,6 +2078,7 @@ public class VRSettings
             var5.println("hudPitchOffset:" + this.hudPitchOffset);
             var5.println("hudYawOffset:" + this.hudYawOffset);
             var5.println("useFsaa:" + this.useFsaa);
+            var5.println("useMSAA:" + this.useMSAA);
             var5.println("useHighQualityDistortion:" + this.useHighQualityDistortion);
             var5.println("fsaaScaleFactor:" + this.fsaaScaleFactor);
             var5.println("fovChange:" + this.fovChange);
@@ -2124,6 +2158,7 @@ public class VRSettings
             var5.println("allowAvatarIK:" + this.allowAvatarIK);
             var5.println("hideGui:" + this.hideGui);
             var5.println("movementQuantisation:" + this.movementQuantisation);
+            var5.println("msaaSamples:" + this.msaaSamples);
 
             var5.close();
         }
@@ -2304,6 +2339,24 @@ public class VRSettings
         return addFac;
     }
 
+    public static int getMsaaSampleCount(int msaaSamples)
+    {
+        int samples = 4;
+        switch (msaaSamples)
+        {
+            case MSAA_2:
+                samples = 2;
+                break;
+            case MSAA_4:
+                samples = 4;
+                break;
+            case MSAA_8:
+                samples = 8;
+                break;
+        }
+        return samples;
+    }
+
     public boolean isComfortYawTransitionKeyAllowed() {
         if ((this.useVrComfort == VR_COMFORT_PITCHANDYAW || this.useVrComfort == VR_COMFORT_YAW) &&
             this.useKeyBindingForComfortYaw) {
@@ -2383,6 +2436,7 @@ public class VRSettings
         LENS_SEPARATION_SCALE_FACTOR("Lens Sep. Scale", true, false),
         ASPECT_RATIO_CORRECTION("Asp. Correction", false, false),
         FSAA("FSAA", false, true),
+        MSAA("MSAA", false, true),
         HIGH_QUALITY_DISTORTION("HQ Distortion", false, true),
         FSAA_SCALEFACTOR("FSAA", true, false),
         USE_QUATERNIONS("Orient. Mode", false, true),
@@ -2435,6 +2489,7 @@ public class VRSettings
         JOYSTICK_AIM_TYPE("Aim Type", false, false),
         AIM_PITCH_OFFSET("Vertical Cursor Offset",true,false),
         INERTIA_FACTOR("Player Inertia",false,true),
+        MSAA_SAMPLES("MSAA Samples", false, true),
         USE_VR_COMFORT("VR Comfort", false, true),
         ALLOW_FORWARD_PLUS_STRAFE("Forward + Strafe", false, true),
         VR_COMFORT_USE_KEY_BINDING_FOR_YAW("Trigger Yaw With", false, true),

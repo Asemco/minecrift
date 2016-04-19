@@ -138,7 +138,7 @@
      private MusicTicker mcMusicTicker;
      private ResourceLocation mojangLogo;
      private final MinecraftSessionService sessionService;
-@@ -331,9 +365,105 @@
+@@ -331,9 +365,107 @@
      private String debugProfilerName = "root";
      private static final String __OBFID = "CL_00000631";
  
@@ -147,6 +147,8 @@
 +    public final float PIOVER180 = (float)(Math.PI/180);
 +    public boolean reinitFramebuffers = true;
 +    public Framebuffer[] framebuffers = new Framebuffer[2];
++    public Framebuffer[] resolveframebuffers = new Framebuffer[2];
++    public boolean multiSample = false;
 +    public Framebuffer guiFramebuffer = null;
 +    public int lastDisplayFBWidth = 0;
 +    public int lastDisplayFBHeight = 0;
@@ -244,7 +246,7 @@
          this.mcDataDir = dataDir;
          this.fileAssets = assetsDir;
          this.fileResourcepacks = resourcePackDir;
-@@ -356,6 +486,19 @@
+@@ -356,6 +488,19 @@
          this.jvm64bit = isJvm64bit();
          ImageIO.setUseCache(false);
          Bootstrap.register();
@@ -264,7 +266,7 @@
      }
  
      private static boolean isJvm64bit()
-@@ -421,24 +564,37 @@
+@@ -421,24 +566,37 @@
          File var2 = new File(getMinecraft().mcDataDir, "crash-reports");
          File var3 = new File(var2, "crash-" + (new SimpleDateFormat("yyyy-MM-dd_HH.mm.ss")).format(new Date()) + "-client.txt");
          System.out.println(crashReportIn.getCompleteReport());
@@ -307,7 +309,7 @@
      public void setServer(String serverHostname, int serverPort)
      {
          this.serverName = serverHostname;
-@@ -448,9 +604,11 @@
+@@ -448,9 +606,11 @@
      /**
       * Starts the game: initializes the canvas, the title, the settings, etcetera.
       */
@@ -321,7 +323,7 @@
  
          if (this.gameSettings.overrideHeight > 0 && this.gameSettings.overrideWidth > 0)
          {
-@@ -480,7 +638,9 @@
+@@ -480,7 +640,9 @@
          }
  
          Display.setResizable(true);
@@ -332,7 +334,7 @@
          logger.info("LWJGL Version: " + Sys.getVersion());
          Util.EnumOS var1 = Util.getOSType();
  
-@@ -504,7 +664,14 @@
+@@ -504,7 +666,14 @@
  
          try
          {
@@ -348,7 +350,7 @@
          }
          catch (LWJGLException var7)
          {
-@@ -552,11 +719,33 @@
+@@ -552,11 +721,33 @@
          this.mcResourceManager = new SimpleReloadableResourceManager(this.metadataSerializer_);
          this.mcLanguageManager = new LanguageManager(this.metadataSerializer_, this.gameSettings.language);
          this.mcResourceManager.registerReloadListener(this.mcLanguageManager);
@@ -384,7 +386,7 @@
          this.mcSoundHandler = new SoundHandler(this.mcResourceManager, this.gameSettings);
          this.mcResourceManager.registerReloadListener(this.mcSoundHandler);
          this.mcMusicTicker = new MusicTicker(this);
-@@ -567,13 +756,30 @@
+@@ -567,13 +758,30 @@
              this.fontRendererObj.setUnicodeFlag(this.isUnicode());
              this.fontRendererObj.setBidiFlag(this.mcLanguageManager.isCurrentLanguageBidirectional());
          }
@@ -416,7 +418,7 @@
          this.entityRenderer = new EntityRenderer(this, this.mcResourceManager);
          this.mcResourceManager.registerReloadListener(this.entityRenderer);
          AchievementList.openInventory.setStatStringFormatter(new IStatStringFormat()
-@@ -591,6 +797,12 @@
+@@ -591,6 +799,12 @@
                  }
              }
          });
@@ -429,7 +431,7 @@
          this.mouseHelper = new MouseHelper();
          this.checkGLError("Pre startup");
          GL11.glEnable(GL11.GL_TEXTURE_2D);
-@@ -605,30 +817,110 @@
+@@ -605,30 +819,111 @@
          GL11.glLoadIdentity();
          GL11.glMatrixMode(GL11.GL_MODELVIEW);
          this.checkGLError("Startup");
@@ -533,6 +535,7 @@
 +		}
          this.mojangLogo = null;
          this.loadingScreen = new LoadingScreenRenderer(this);
++        checkGLError("LoadingScreen framebuffer");
  
 +        if( fmlClientHandler != null ) {
 +            Reflector.callVoid(fmlClientHandler, Reflector.FMLClientHandler_onInitializationComplete, new Object[0]);
@@ -541,7 +544,7 @@
          if (this.gameSettings.fullScreen && !this.fullscreen)
          {
              this.toggleFullscreen();
-@@ -636,7 +928,11 @@
+@@ -636,7 +931,11 @@
  
          try
          {
@@ -554,7 +557,7 @@
          }
          catch (OpenGLException var4)
          {
-@@ -782,8 +1078,8 @@
+@@ -782,8 +1081,8 @@
          GL11.glDisable(GL11.GL_FOG);
          GL11.glDisable(GL11.GL_DEPTH_TEST);
          GL11.glEnable(GL11.GL_TEXTURE_2D);
@@ -565,7 +568,7 @@
          {
              this.mojangLogo = this.renderEngine.getDynamicTextureLocation("logo", new DynamicTexture(ImageIO.read(this.mcDefaultResourcePack.getInputStream(locationMojangPng))));
              this.renderEngine.bindTexture(this.mojangLogo);
-@@ -791,8 +1087,8 @@
+@@ -791,8 +1090,8 @@
          catch (IOException var7)
          {
              logger.error("Unable to load logo: " + locationMojangPng, var7);
@@ -576,7 +579,7 @@
          Tessellator var4 = Tessellator.instance;
          var4.startDrawingQuads();
          var4.setColorOpaque_I(16777215);
-@@ -813,6 +1109,9 @@
+@@ -813,6 +1112,9 @@
          GL11.glEnable(GL11.GL_ALPHA_TEST);
          GL11.glAlphaFunc(GL11.GL_GREATER, 0.1F);
          GL11.glFlush();
@@ -586,7 +589,7 @@
          this.resetSize();
      }
  
-@@ -845,7 +1144,8 @@
+@@ -845,7 +1147,8 @@
       */
      public void displayGuiScreen(GuiScreen guiScreenIn)
      {
@@ -596,7 +599,7 @@
          {
              this.currentScreen.onGuiClosed();
          }
-@@ -858,6 +1158,21 @@
+@@ -858,6 +1161,21 @@
          {
              guiScreenIn = new GuiGameOver();
          }
@@ -618,7 +621,7 @@
  
          if (guiScreenIn instanceof GuiMainMenu)
          {
-@@ -870,7 +1185,7 @@
+@@ -870,7 +1188,7 @@
          if (guiScreenIn != null)
          {
              this.setIngameNotInFocus();
@@ -627,7 +630,7 @@
              int var3 = var2.getScaledWidth();
              int var4 = var2.getScaledHeight();
              ((GuiScreen)guiScreenIn).setWorldAndResolution(this, var3, var4);
-@@ -886,7 +1201,9 @@
+@@ -886,7 +1204,9 @@
      /**
       * Checks for an OpenGL error. If there is one, prints the error ID and error string.
       */
@@ -638,7 +641,7 @@
      {
          int var2 = GL11.glGetError();
  
-@@ -1016,8 +1333,11 @@
+@@ -1016,8 +1336,11 @@
      /**
       * Called repeatedly from run()
       */
@@ -651,7 +654,7 @@
          this.mcProfiler.startSection("root");
  
          if (Display.isCreated() && Display.isCloseRequested())
-@@ -1025,6 +1345,10 @@
+@@ -1025,6 +1348,10 @@
              this.shutdown();
          }
  
@@ -662,7 +665,7 @@
          if (this.isGamePaused && this.theWorld != null)
          {
              float var1 = this.timer.renderPartialTicks;
-@@ -1042,77 +1366,192 @@
+@@ -1042,77 +1369,192 @@
              this.refreshResources();
          }
  
@@ -910,7 +913,7 @@
          Thread.yield();
          this.mcProfiler.startSection("stream");
          this.mcProfiler.startSection("update");
-@@ -1121,9 +1560,10 @@
+@@ -1121,9 +1563,10 @@
          this.stream.func_152922_k();
          this.mcProfiler.endSection();
          this.mcProfiler.endSection();
@@ -922,7 +925,7 @@
  
          while (getSystemTime() >= this.debugUpdateTime + 1000L)
          {
-@@ -1141,11 +1581,29 @@
+@@ -1141,11 +1584,29 @@
          }
  
          this.mcProfiler.endSection();
@@ -956,7 +959,7 @@
      }
  
      /**
-@@ -1153,35 +1611,40 @@
+@@ -1153,35 +1614,40 @@
       */
      public void resetSize()
      {
@@ -1022,7 +1025,7 @@
      }
  
      public boolean isFramerateLimitBelowMax()
-@@ -1467,8 +1930,9 @@
+@@ -1467,8 +1933,9 @@
              }
          }
      }
@@ -1034,7 +1037,7 @@
      {
          if (this.leftClickCounter <= 0)
          {
-@@ -1476,7 +1940,9 @@
+@@ -1476,7 +1943,9 @@
  
              if (this.objectMouseOver == null)
              {
@@ -1045,7 +1048,7 @@
  
                  if (this.playerController.isNotCreative())
                  {
-@@ -1515,7 +1981,9 @@
+@@ -1515,7 +1984,9 @@
      /**
       * Called when user clicked he's mouse right button (place)
       */
@@ -1056,7 +1059,7 @@
      {
          this.rightClickDelayTimer = 4;
          boolean var1 = true;
-@@ -1523,7 +1991,9 @@
+@@ -1523,7 +1994,9 @@
  
          if (this.objectMouseOver == null)
          {
@@ -1067,7 +1070,7 @@
          }
          else
          {
-@@ -1546,7 +2016,14 @@
+@@ -1546,7 +2019,14 @@
                      {
                          int var6 = var2 != null ? var2.stackSize : 0;
  
@@ -1083,7 +1086,7 @@
                          {
                              var1 = false;
                              this.thePlayer.swingItem();
-@@ -1573,7 +2050,14 @@
+@@ -1573,7 +2053,14 @@
          {
              ItemStack var7 = this.thePlayer.inventory.getCurrentItem();
  
@@ -1099,7 +1102,7 @@
              {
                  this.entityRenderer.itemRenderer.resetEquippedProgress2();
              }
-@@ -1632,8 +2116,10 @@
+@@ -1632,8 +2119,10 @@
              }
  
              Display.setFullscreen(this.fullscreen);
@@ -1112,7 +1115,7 @@
          }
          catch (Exception var2)
          {
-@@ -1646,29 +2132,23 @@
+@@ -1646,29 +2135,23 @@
       */
      private void resize(int width, int height)
      {
@@ -1150,7 +1153,7 @@
      }
  
      /**
-@@ -1693,11 +2173,24 @@
+@@ -1693,11 +2176,24 @@
          {
              --this.rightClickDelayTimer;
          }
@@ -1175,7 +1178,7 @@
              this.ingameGUI.updateTick();
          }
  
-@@ -1719,6 +2212,10 @@
+@@ -1719,6 +2215,10 @@
  
          if (this.currentScreen == null && this.thePlayer != null)
          {
@@ -1186,7 +1189,7 @@
              if (this.thePlayer.getHealth() <= 0.0F)
              {
                  this.displayGuiScreen((GuiScreen)null);
-@@ -1792,6 +2289,12 @@
+@@ -1792,6 +2292,12 @@
  
              while (Mouse.next())
              {
@@ -1199,7 +1202,7 @@
                  var9 = Mouse.getEventButton();
                  KeyBinding.setKeyBindState(var9 - 100, Mouse.getEventButtonState());
  
-@@ -1808,6 +2311,11 @@
+@@ -1808,6 +2314,11 @@
  
                      if (var4 != 0)
                      {
@@ -1211,7 +1214,7 @@
                          this.thePlayer.inventory.changeCurrentItem(var4);
  
                          if (this.gameSettings.noclip)
-@@ -1824,6 +2332,8 @@
+@@ -1824,6 +2335,8 @@
  
                              this.gameSettings.noclipRate += (float)var4 * 0.25F;
                          }
@@ -1220,7 +1223,7 @@
                      }
  
                      if (this.currentScreen == null)
-@@ -1838,6 +2348,11 @@
+@@ -1838,6 +2351,11 @@
                          this.currentScreen.handleMouseInput();
                      }
                  }
@@ -1232,7 +1235,7 @@
              }
  
              if (this.leftClickCounter > 0)
-@@ -1889,6 +2404,10 @@
+@@ -1889,6 +2407,10 @@
                      }
                      else
                      {
@@ -1243,7 +1246,7 @@
                          if (Keyboard.getEventKey() == 1)
                          {
                              this.displayInGameMenu();
-@@ -1932,10 +2451,12 @@
+@@ -1932,10 +2454,12 @@
                              this.gameSettings.saveOptions();
                          }
  
@@ -1257,7 +1260,7 @@
  
                          if (Keyboard.getEventKey() == 61)
                          {
-@@ -1975,6 +2496,11 @@
+@@ -1975,6 +2499,11 @@
                          }
                      }
                  }
@@ -1269,7 +1272,7 @@
              }
  
              for (var9 = 0; var9 < 9; ++var9)
-@@ -2070,6 +2596,12 @@
+@@ -2070,6 +2599,12 @@
  
              this.sendClickBlockToController(this.currentScreen == null && this.gameSettings.keyBindAttack.getIsKeyPressed() && this.inGameHasFocus);
          }
@@ -1282,7 +1285,7 @@
  
          if (this.theWorld != null)
          {
-@@ -2164,7 +2696,11 @@
+@@ -2164,7 +2699,11 @@
              this.mcProfiler.endStartSection("pendingConnection");
              this.myNetworkManager.processReceivedPackets();
          }
@@ -1295,7 +1298,7 @@
          this.mcProfiler.endSection();
          this.systemTime = getSystemTime();
      }
-@@ -2174,6 +2710,15 @@
+@@ -2174,6 +2713,15 @@
       */
      public void launchIntegratedServer(String folderName, String worldName, WorldSettings worldSettingsIn)
      {
@@ -1311,7 +1314,7 @@
          this.loadWorld((WorldClient)null);
          System.gc();
          ISaveHandler var4 = this.saveLoader.getSaveLoader(folderName, false);
-@@ -2207,37 +2752,81 @@
+@@ -2207,37 +2755,81 @@
  
          this.loadingScreen.displaySavingString(I18n.format("menu.loadingLevel", new Object[0]));
  
@@ -1416,7 +1419,7 @@
  
      /**
       * unloads the current world first
-@@ -2252,6 +2841,13 @@
+@@ -2252,6 +2844,13 @@
       */
      public void loadWorld(WorldClient worldClientIn, String loadingMessage)
      {
@@ -1430,7 +1433,7 @@
          if (worldClientIn == null)
          {
              NetHandlerPlayClient var3 = this.getNetHandler();
-@@ -2264,6 +2860,23 @@
+@@ -2264,6 +2863,23 @@
              if (this.theIntegratedServer != null)
              {
                  this.theIntegratedServer.initiateShutdown();
@@ -1454,7 +1457,7 @@
              }
  
              this.theIntegratedServer = null;
-@@ -2290,6 +2903,15 @@
+@@ -2290,6 +2906,15 @@
              this.mcResourcePackRepository.func_148529_f();
              this.setServerData((ServerData)null);
              this.integratedServerIsRunning = false;
@@ -1470,7 +1473,7 @@
          }
  
          this.mcSoundHandler.stopSounds();
-@@ -2406,10 +3028,12 @@
+@@ -2406,10 +3031,12 @@
          return this.thePlayer != null ? this.thePlayer.sendQueue : null;
      }
  
@@ -1484,7 +1487,7 @@
  
      public static boolean isFancyGraphicsEnabled()
      {
-@@ -2437,107 +3061,117 @@
+@@ -2437,107 +3064,117 @@
              Item var2;
              int var5;
  
@@ -1701,7 +1704,7 @@
  
              if (var1)
              {
-@@ -2810,11 +3444,18 @@
+@@ -2810,11 +3447,18 @@
          playerSnooper.addStatToSnooper("gl_max_texture_size", Integer.valueOf(getGLMaximumTextureSize()));
      }
  
@@ -1720,7 +1723,7 @@
          for (int var0 = 16384; var0 > 0; var0 >>= 1)
          {
              GL11.glTexImage2D(GL11.GL_PROXY_TEXTURE_2D, 0, GL11.GL_RGBA, var0, var0, 0, GL11.GL_RGBA, GL11.GL_UNSIGNED_BYTE, (ByteBuffer)null);
-@@ -2822,12 +3463,14 @@
+@@ -2822,12 +3466,14 @@
  
              if (var1 != 0)
              {
@@ -1735,7 +1738,7 @@
  
      /**
       * Returns whether snooping is enabled or not.
-@@ -3134,4 +3777,1081 @@
+@@ -3134,4 +3780,1128 @@
              }
          }
      }
@@ -1758,7 +1761,7 @@
 +                if (this.vrSettings.displayMirrorMode != VRSettings.MIRROR_OFF)
 +                {
 +                    OpenGlHelper.func_153171_g(GL30.GL_READ_FRAMEBUFFER, mirrorFB.getFramebufferId());   // GL30.glBindFramebuffer
-+                    OpenGlHelper.func_153171_g(GL30.GL_DRAW_FRAMEBUFFER, 0);   // GL30.glBindFramebuffer
++                    OpenGlHelper.func_153171_g(GL30.GL_DRAW_FRAMEBUFFER, 0);                             // GL30.glBindFramebuffer
 +                    GL11.glClearColor(0f, 0f, 0f, 1.0f);
 +                    GL11.glClearDepth(1.0D);
 +                    GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
@@ -1916,6 +1919,16 @@
 +                this.framebuffers[1] = null;
 +            }
 +
++            if (this.resolveframebuffers[0] != null) {
++                this.resolveframebuffers[0].deleteFramebuffer();
++                this.resolveframebuffers[0] = null;
++            }
++
++            if (this.resolveframebuffers[1] != null) {
++                this.resolveframebuffers[1].deleteFramebuffer();
++                this.resolveframebuffers[1] = null;
++            }
++
 +            this.stereoProvider.deleteRenderTextures();
 +
 +            if (this.guiFramebuffer != null) {
@@ -1955,8 +1968,14 @@
 +            _LanczosShader_texelHeightOffsetUniform = -1;
 +            _LanczosShader_inputImageTextureUniform = -1;
 +
-+            int multiSampleCount = 0;
-+            boolean multiSample = (multiSampleCount > 0 ? true : false);
++            int multiSampleCount = VRSettings.getMsaaSampleCount(this.vrSettings.msaaSamples);
++            multiSample = this.vrSettings.useMSAA && this.vrSettings.useFsaa;  // TODO: Can only currently use MSAA when fsaa is enabled. Oculus SDK will not yet supply multisample textures.
++            if (multiSample) {
++                GL11.glEnable(GL13.GL_MULTISAMPLE);
++            }
++            else {
++                GL11.glDisable(GL13.GL_MULTISAMPLE);
++            }
 +            boolean genMipMaps = true;
 +            this.entityRenderer.generatedIconMipmaps[0] = false;
 +            this.entityRenderer.generatedIconMipmaps[1] = false;
@@ -2009,13 +2028,23 @@
 +            this.checkGLError("Render Texture setup");
 +
 +            
-+            this.framebuffers[0] = new Framebuffer("L Eye", this.EyeTextureSize[0].w, this.EyeTextureSize[0].h, true, genMipMaps, multiSample, multiSampleCount, this.vrSettings.useFsaa ? null : renderTexProvider[0]);
++            this.framebuffers[0] = new Framebuffer("L Eye", this.EyeTextureSize[0].w, this.EyeTextureSize[0].h, true, false, multiSample, multiSampleCount, this.vrSettings.useFsaa ? null : renderTexProvider[0]);
 +            print(this.framebuffers[0].toString());
 +            this.checkGLError("Left Eye framebuffer setup");
 +
-+            this.framebuffers[1] = new Framebuffer("R Eye", this.EyeTextureSize[1].w, this.EyeTextureSize[1].h, true, genMipMaps, multiSample, multiSampleCount, this.vrSettings.useFsaa ? null : renderTexProvider[1]);
++            this.framebuffers[1] = new Framebuffer("R Eye", this.EyeTextureSize[1].w, this.EyeTextureSize[1].h, true, false, multiSample, multiSampleCount, this.vrSettings.useFsaa ? null : renderTexProvider[1]);
 +            print(this.framebuffers[1].toString());
 +            this.checkGLError("Right Eye framebuffer setup");
++
++            if (multiSample) {
++                this.resolveframebuffers[0] = new Framebuffer("L Eye MSAA Resolve", this.EyeTextureSize[0].w, this.EyeTextureSize[0].h, true, false, false, 0, this.vrSettings.useFsaa ? null : renderTexProvider[0]);
++                print(this.resolveframebuffers[0].toString());
++                this.checkGLError("MSAA Resolve Left Eye framebuffer setup");
++
++                this.resolveframebuffers[1] = new Framebuffer("R Eye MSAA Resolve", this.EyeTextureSize[1].w, this.EyeTextureSize[1].h, true, false, false, 0, this.vrSettings.useFsaa ? null : renderTexProvider[1]);
++                print(this.resolveframebuffers[1].toString());
++                this.checkGLError("MSAA Resolve Right Eye framebuffer setup");
++            }
 +
 +            this.guiFramebuffer  = new Framebuffer("GUI", this.displayFBWidth, this.displayFBHeight, true, genMipMaps);
 +            print(this.guiFramebuffer.toString());
@@ -2484,11 +2513,32 @@
 +
 +            GL11.glTranslatef(0.0f, 0.0f, -0.7f);
 +
++            if (this.multiSample) {
++                // Resolve MSAA buffer
++                OpenGlHelper.func_153171_g(GL30.GL_READ_FRAMEBUFFER, this.framebuffers[eye.value()].getFramebufferId());        // GL30.glBindFramebuffer
++                OpenGlHelper.func_153171_g(GL30.GL_DRAW_FRAMEBUFFER, this.resolveframebuffers[eye.value()].getFramebufferId()); // GL30.glBindFramebuffer
++                GL11.glClearColor(0f, 0f, 0f, 1.0f);
++                GL11.glClearDepth(1.0D);
++                GL11.glClear(GL11.GL_COLOR_BUFFER_BIT | GL11.GL_DEPTH_BUFFER_BIT);
++
++                GL30.glBlitFramebuffer(0, 0, this.framebuffers[eye.value()].framebufferWidth, this.framebuffers[eye.value()].framebufferHeight,
++                            0, 0, this.resolveframebuffers[eye.value()].framebufferWidth, this.resolveframebuffers[eye.value()].framebufferHeight,
++                            GL11.GL_COLOR_BUFFER_BIT, GL11.GL_NEAREST);
++
++                //OpenGlHelper.func_153171_g(GL30.GL_READ_FRAMEBUFFER, 0);   // GL30.glBindFramebuffer
++                checkGLError("After Resolve MSAA buffer");
++            }
++
 +            // Now switch to 1st pass FSAA result target framebuffer
 +            this.fsaaFirstPassResultFBO[eye.value()].bindRenderTarget();
 +
 +            // Bind the FBO
-+            this.framebuffers[eye.value()].bindFramebufferTexture();
++            if (!this.multiSample) {
++                this.framebuffers[eye.value()].bindFramebufferTexture();
++            }
++            else {
++                this.resolveframebuffers[eye.value()].bindFramebufferTexture();
++            }
 +
 +            GL11.glClearColor(RED_COLOUR_COMPONENT, GREEN_COLOUR_COMPONENT, BLUE_COLOUR_COMPONENT, 1.0f);
 +            GL11.glClearDepth(1.0D);

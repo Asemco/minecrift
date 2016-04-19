@@ -29,6 +29,8 @@ public class GuiRenderOpticsSettings  extends BaseGuiSettings implements GuiEven
             VRSettings.VrOptions.DUMMY,
             VRSettings.VrOptions.FSAA,
             VRSettings.VrOptions.FSAA_SCALEFACTOR,
+            VRSettings.VrOptions.MSAA,
+            VRSettings.VrOptions.MSAA_SAMPLES,
     };
 
     static VRSettings.VrOptions[] oculusDK2DisplayOptions = new VRSettings.VrOptions[]{
@@ -38,6 +40,8 @@ public class GuiRenderOpticsSettings  extends BaseGuiSettings implements GuiEven
             VRSettings.VrOptions.MIRROR_DISPLAY,
             VRSettings.VrOptions.FSAA,
             VRSettings.VrOptions.FSAA_SCALEFACTOR,
+            VRSettings.VrOptions.MSAA,
+            VRSettings.VrOptions.MSAA_SAMPLES,
             VRSettings.VrOptions.WORLD_SCALE,
 /*            VRSettings.VrOptions.TIMEWARP,
             VRSettings.VrOptions.TIMEWARP_JIT_DELAY,
@@ -56,6 +60,8 @@ public class GuiRenderOpticsSettings  extends BaseGuiSettings implements GuiEven
             VRSettings.VrOptions.MIRROR_DISPLAY,
             VRSettings.VrOptions.FSAA,
             VRSettings.VrOptions.FSAA_SCALEFACTOR,
+            VRSettings.VrOptions.MSAA,
+            VRSettings.VrOptions.MSAA_SAMPLES,
             VRSettings.VrOptions.WORLD_SCALE,/*
             VRSettings.VrOptions.TIMEWARP,
             VRSettings.VrOptions.TIMEWARP_JIT_DELAY,
@@ -154,7 +160,13 @@ public class GuiRenderOpticsSettings  extends BaseGuiSettings implements GuiEven
             }
             else
             {
-                if (var8 == VRSettings.VrOptions.HMD_NAME_PLACEHOLDER)
+                if (var8 == VRSettings.VrOptions.MSAA && !this.guivrSettings.useFsaa) {
+                    String keyBinding = "MSAA: OFF";
+                    GuiSmallButtonEx button = new GuiSmallButtonEx(var8.returnEnumOrdinal(), width, height, var8, keyBinding);
+                    button.enabled = getEnabledState(var8);
+                    this.buttonList.add(button);
+                }
+                else if (var8 == VRSettings.VrOptions.HMD_NAME_PLACEHOLDER)
                 {
                     GuiSmallButtonEx button = new GuiSmallButtonEx(9999, width, height, var8, productName);
                     button.enabled = false;
@@ -199,6 +211,8 @@ public class GuiRenderOpticsSettings  extends BaseGuiSettings implements GuiEven
                 minecraft.vrSettings.useHighQualityDistortion = true;
                 minecraft.vrSettings.useFsaa = false;
                 minecraft.vrSettings.fsaaScaleFactor = 1.4f;
+                minecraft.vrSettings.useMSAA = true;
+                minecraft.vrSettings.msaaSamples = VRSettings.MSAA_4;
                 this.guivrSettings.worldScale = 1f;
 
                 minecraft.reinitFramebuffers = true;
@@ -236,7 +250,9 @@ public class GuiRenderOpticsSettings  extends BaseGuiSettings implements GuiEven
                 num == VRSettings.VrOptions.LOW_PERSISTENCE ||
                 num == VRSettings.VrOptions.DYNAMIC_PREDICTION ||
                 num == VRSettings.VrOptions.OVERDRIVE_DISPLAY ||
-                num == VRSettings.VrOptions.FSAA)
+                num == VRSettings.VrOptions.FSAA ||
+                num == VRSettings.VrOptions.MSAA ||
+                num == VRSettings.VrOptions.MSAA_SAMPLES)
 	        {
                 minecraft.reinitFramebuffers = true;
 	        }
@@ -294,6 +310,24 @@ public class GuiRenderOpticsSettings  extends BaseGuiSettings implements GuiEven
                     "Full-Screen AntiAliasing Render Scale",
                     "  What multiple of native resolution should be rendered?",
                     "  Recommended value: 4X"};
+        case MSAA:
+            return new String[] {
+                    "Multisample AntiAliasing",
+                    "  Recommended: ON; greatly improves polygon edge quality",
+                    "  at the expense of increased rendering cost.",
+                    "  ON:  game is rendered using MSAA sampling.",
+                    "  OFF: game is rendered without MSAA sampling.",
+                    "Will only be available if supported by your graphics",
+                    "driver. Currently also only available when FSAA is",
+                    "also enabled."
+            };
+        case MSAA_SAMPLES:
+                return new String[] {
+                        "Multisample AntiAliasing Sample Count",
+                        "  What MSAA sample count to use, higher is smoother",
+                        "  but at a cost to rendering performance.",
+                        "  Recommended value: 8X if your machine can handle",
+                        "                     it!"};
     	case CHROM_AB_CORRECTION:
     		return new String[] {
     				"Chromatic aberration correction", 
@@ -419,6 +453,13 @@ public class GuiRenderOpticsSettings  extends BaseGuiSettings implements GuiEven
         if (var8 == VRSettings.VrOptions.CHROM_AB_CORRECTION)
         {
             return false;
+        }
+
+        if (var8 == VRSettings.VrOptions.MSAA ||
+            var8 == VRSettings.VrOptions.MSAA_SAMPLES) {
+            if (!this.mc.vrSettings.useFsaa) {
+                return false;
+            }
         }
 
         return true;

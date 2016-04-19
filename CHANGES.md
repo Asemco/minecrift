@@ -1,8 +1,8 @@
 [Minecrift 1.7.10 R3]
 
 - Oculus SDK - support SDK 1.3 on Windows including asynchronous timewarp. NOTE: Oculus Home must
-               be installed, and Oculus Home->Settings->General->Unknown Sources MUST be enabled
-               to allow Minecrift to use the Rift.
+               be installed, running and Oculus Home->Settings->General->Unknown Sources MUST be 
+               enabled to allow Minecrift to use the Rift.
                
 
 [Minecrift 1.7.10 R2b]
