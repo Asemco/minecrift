@@ -142,7 +142,7 @@ public class GuiRenderOpticsSettings  extends BaseGuiSettings implements GuiEven
                 }
                 else if (var8 == VRSettings.VrOptions.FSAA_SCALEFACTOR)
                 {
-                    minValue = 1.1f;
+                    minValue = 1.0f;
                     maxValue = 2.0f;
                     increment = 0.1f;
                 }
