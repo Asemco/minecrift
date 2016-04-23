@@ -1968,8 +1968,8 @@
 +            _LanczosShader_texelHeightOffsetUniform = -1;
 +            _LanczosShader_inputImageTextureUniform = -1;
 +
-+            int multiSampleCount = VRSettings.getMsaaSampleCount(this.vrSettings.msaaSamples);
-+            multiSample = this.vrSettings.useMSAA && this.vrSettings.useFsaa;  // TODO: Can only currently use MSAA when fsaa is enabled. Oculus SDK will not yet supply multisample textures.
++            int multiSampleCount = 0; VRSettings.getMsaaSampleCount(this.vrSettings.msaaSamples); // Disabled for now, until can get shaders working with MSAA
++            multiSample = false; //this.vrSettings.useMSAA && this.vrSettings.useFsaa;  // TODO: Can only currently use MSAA when fsaa is enabled. Oculus SDK will not yet supply multisample textures.
 +            if (multiSample) {
 +                GL11.glEnable(GL13.GL_MULTISAMPLE);
 +            }

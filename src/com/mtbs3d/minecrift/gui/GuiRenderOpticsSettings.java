@@ -318,8 +318,7 @@ public class GuiRenderOpticsSettings  extends BaseGuiSettings implements GuiEven
                     "  ON:  game is rendered using MSAA sampling.",
                     "  OFF: game is rendered without MSAA sampling.",
                     "Will only be available if supported by your graphics",
-                    "driver. Currently also only available when FSAA is",
-                    "also enabled."
+                    "driver."
             };
         case MSAA_SAMPLES:
                 return new String[] {
@@ -457,9 +456,9 @@ public class GuiRenderOpticsSettings  extends BaseGuiSettings implements GuiEven
 
         if (var8 == VRSettings.VrOptions.MSAA ||
             var8 == VRSettings.VrOptions.MSAA_SAMPLES) {
-            if (!this.mc.vrSettings.useFsaa) {
-                return false;
-            }
+            //if (!this.mc.vrSettings.useFsaa) {
+                return false; // Disabled for now
+            //}
         }
 
         return true;
