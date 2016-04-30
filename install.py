@@ -178,7 +178,7 @@ def installAndPatchMcp( mcp_dir ):
         replacelineinfile( target_start_java_file, "args = concat(new String[] {\"--version\", \"mcp\"", "        args = concat(new String[] {\"--version\", \"mcp\", \"--accessToken\", \"0\", \"--assetIndex\", \"%s\", \"--userProperties\", \"{}\"}, args);\n" % mc_version );
         target_2 = os.path.join(mcp_dir,"src","minecraft")
         if os.path.exists(target_2):
-            shutil.copy(target_start_java_file,os.path.join(target_2, "Start.java")
+            shutil.copy(target_start_java_file,os.path.join(target_2, "Start.java"))
     
     # Setup the appropriate mcp file versions
     mcp_version_cfg = os.path.join(mcp_dir,"conf","version.cfg")
